@@ -94,3 +94,28 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const client = await clientPromise;
+    const db = client.db("test");
+
+    const result = await db.collection("chats").deleteMany({});
+
+    return NextResponse.json(
+      {
+        message: "All chats deleted successfully",
+        deletedCount: result.deletedCount,
+      },
+      {
+        status: 200,
+      }
+    );
+  } catch (error) {
+    console.error("Error deleting chats:", error);
+    return NextResponse.json(
+      { error: "Failed to delete chats" },
+      { status: 500 }
+    );
+  }
+}

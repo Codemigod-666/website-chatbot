@@ -56,6 +56,33 @@ export default function ChatModal({ isOpen, onClose }: ChatModalProps) {
     }
   }, [newMessageIds]);
 
+  const handleDeleteChat = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/chat", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        const { userMessage, aiMessage } = data;
+
+        setMessages([userMessage, aiMessage]);
+
+        setNewMessageIds(new Set([userMessage.id, aiMessage.id]));
+      } else {
+        console.error("Error deleting chat:", await response.text());
+      }
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+    } finally {
+      setIsLoading(false);
+      onClose();
+    }
+  };
+
   const handleSendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
 
@@ -127,6 +154,7 @@ export default function ChatModal({ isOpen, onClose }: ChatModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">Chat Assistant</h2>
+
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-muted transition-colors"
@@ -148,9 +176,9 @@ export default function ChatModal({ isOpen, onClose }: ChatModalProps) {
           ) : (
             messages.map((message) => (
               <ChatMessage
-                key={message.id}
+                key={message?.id}
                 message={message}
-                isNew={newMessageIds.has(message.id)}
+                isNew={newMessageIds.has(message?.id)}
               />
             ))
           )}
@@ -159,6 +187,14 @@ export default function ChatModal({ isOpen, onClose }: ChatModalProps) {
 
         {/* Input */}
         <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+
+        <button
+          onClick={handleDeleteChat}
+          className="p-2 rounded-sm bg-purple-600 text-white hover:bg-blue-950 transition-colors"
+          aria-label="Close chat"
+        >
+          Delete Chat History
+        </button>
       </div>
     </div>
   );
